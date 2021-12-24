@@ -1,0 +1,16 @@
+version: '3'
+services:
+  app: 
+    container_name: node-app #
+    restart: always #if container fails we want this to try and restart
+    build: . #telling docker to use the current directory to build the image (it will use the dockerfile in this directory)
+    ports:
+      - '80:3000' #im connecting my host port 80 to 3000 because this is the exposed port in my nodejsapplication
+    links:
+      - mongo
+  
+  mongo:
+    container_name: mongo-app
+    image: mongo
+    ports:
+      - '27017:27017'
