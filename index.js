@@ -10,13 +10,15 @@ app.use(express.json())
 
 
 var MongoClient = require('mongodb').MongoClient;
-var url = "mongodb://mongo:27017/mongo-app/";
+// var url = "mongodb://mongo:27017/mongo-app/";
+var url = "mongodb://localhost:27017/";
 
 //search for a document
 app.post('/index',(request, response)=>{
 
     MongoClient.connect(url, function(err, db) {
     if (err) throw err;
+
         var dbo = db.db("documents");
 
         dbo.collection("cloud-ca").insertOne(request.body, function(err, res) {
@@ -24,16 +26,42 @@ app.post('/index',(request, response)=>{
             console.log("Inserted!");
             db.close();
         });
-});
+    });
 
-response.send(request.body);
+    response.send(request.body);
 
 })
 
 //search for a document
 app.get('/search', (req, res) => {
+     console.log(req.query.title)
+    var theResponse;
     
+    MongoClient.connect(url, function(err, db) {
+        
+        if (err) throw err;
+            var dbo = db.db("documents");
+            
+            dbo.collection('cloud-ca').createIndex(
+                {title: 'text'}
+                
+            )
+        
+            console.log('===========MATCHED DOCUMENTS============');
 
+            dbo.collection("cloud-ca")
+                .find({$text:{$search:req.query.title.toString()}}).toArray((err, data) => {
+                if(err) throw err;
+
+                theResponse = data
+                
+                console.log(theResponse); 
+                res.send(data)
+            
+                db.close();
+
+            });
+        });
 })
 
 
