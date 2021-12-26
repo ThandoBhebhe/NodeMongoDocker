@@ -8,7 +8,6 @@ const portNumber = 3000;
 app.use(express.json())
 // var mongo = require('mongodb');
 
-
 var MongoClient = require('mongodb').MongoClient;
 // var url = "mongodb://mongo:27017/mongo-app/";
 var url = "mongodb://localhost:27017/";
@@ -17,20 +16,53 @@ var url = "mongodb://localhost:27017/";
 app.post('/index',(request, response)=>{
 
     MongoClient.connect(url, function(err, db) {
-    if (err) throw err;
+    if (err) throw response.send(err);
 
         var dbo = db.db("documents");
 
         dbo.collection("cloud-ca").insertOne(request.body, function(err, res) {
-            if (err) throw err;
-            console.log("Inserted!");
-            db.close();
+            
+            if (err){ 
+                response.send(err)
+            }else{
+                console.log("Inserted!");
+                response.send('Inserted document')
+            }
+            
+            // db.close();
         });
-    });
 
-    response.send(request.body);
+      dbo.command({
+            collMod: "cloud-ca",
+            validator: { $jsonSchema: {
+                bsonType: "object",
+                required: [ "title", "body","tags" ],
+                additionalProperties: false,
+                properties: {
+                    _id: {},
+                    title: {
+                    bsonType: "string",
+                    description: "title must be a string and is required"
+                    },
+
+                    body: {
+                        bsonType: "string",
+                        description: "body must be a string and is required"
+                    },tags: {
+                        bsonType: "array",
+                        description: "body must be a string and is required"
+                    }
+                }
+            }},
+            validationLevel: "strict"
+        } )
+
+    });
+    
+    // response.send(request.body);
 
 })
+
 
 //search for a document
 app.get('/search', (req, res) => {
@@ -52,13 +84,11 @@ app.get('/search', (req, res) => {
     
     MongoClient.connect(url, function(err, db) {
         
-        
         if (err) throw res.send('Could not connect to server: ' + err.message);
             var dbo = db.db("documents");
             
             dbo.collection('cloud-ca').createIndex(
-                {title: 'text', body: 'text'}
-                
+                {title: 'text', body: 'text', tags: 'text'}
             )
         
             console.log('===========MATCHED DOCUMENTS============');
@@ -78,6 +108,7 @@ app.get('/search', (req, res) => {
     });
 })
 
+
 //return the mathching documents given its slugs
 app.get('/document-slug', (req, res) => {
 
@@ -85,22 +116,22 @@ app.get('/document-slug', (req, res) => {
     let stringWithRemovedHyphens = stringWithRemovedNumbers.replace(/-/g, ' ').trim()
     let stringWithRemovedStopWords = stopWord.removeStopwords(stringWithRemovedHyphens.split(' ')).toString().replace(/,/g," ")
 
+    console.log(`unslugged-word: ${stringWithRemovedStopWords.trim()}`)
 
-    console.log(`unslugged-word: ${stringWithRemovedStopWords}`)
     MongoClient.connect(url, function(err, db) {
         
         if (err) throw res.send('Could not connect to server: ' + err.message);
             var dbo = db.db("documents");
             
             dbo.collection('cloud-ca').createIndex(
-                {title: 'text', body:'text'}
+                {title: 'text', body:'text', tags: 'text'}
                 
             )
         
             console.log('===========MATCHED DOCUMENTS============');
 
             dbo.collection("cloud-ca")
-                .find({$text:{$search: stringWithRemovedHyphens}}).toArray((err, data) => {
+                .find({$text:{$search: stringWithRemovedStopWords.trim()}}).toArray((err, data) => {
                 if(err) throw err;
 
                 theResponse = data
@@ -112,9 +143,8 @@ app.get('/document-slug', (req, res) => {
 
             });
     });
-
-
 })
+
 
 app.use((req, res) =>{
     res.status(404).send('404 Not Found');
