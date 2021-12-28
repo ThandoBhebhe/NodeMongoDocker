@@ -9,8 +9,8 @@ app.use(express.json())
 // var mongo = require('mongodb');
 
 var MongoClient = require('mongodb').MongoClient;
-// var url = "mongodb://mongo:27017/mongo-app/";
-var url = "mongodb://localhost:27017/";
+var url = "mongodb://mongo:27017/mongo-app/";
+// var url = "mongodb://localhost:27017/";
 
 //search for a document
 app.post('/index',(request, response)=>{
@@ -50,7 +50,7 @@ app.post('/index',(request, response)=>{
                         description: "body must be a string and is required"
                     },tags: {
                         bsonType: "array",
-                        description: "body must be a string and is required"
+                        description: "tags must be an array and is required"
                     }
                 }
             }},
