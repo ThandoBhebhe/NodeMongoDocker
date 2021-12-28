@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-app-deployment
+  labels:
+    app: node-app-meta-data-label
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: node-app-pod
+  template:
+    metadata:
+      labels:
+        app: node-app-pod
+    spec:
+      containers:
+      - name: node-app-container
+        image: thando/node-app
+        ports:
+        - containerPort: 80
+

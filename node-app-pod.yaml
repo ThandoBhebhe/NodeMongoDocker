@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+   name: node-app-pod
+spec:
+   containers:
+   - name: docker-node-container-01
+     image: docker-node-image
+     ports:
+     - containerPort: 3000
